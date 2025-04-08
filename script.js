@@ -48,7 +48,7 @@ if (!canvas || !ctx || !scoreElement || !livesElement) {
 let ballRadius = 10, dx, dy, x, y;
 let paddleWidth = 80, paddleHeight = 12, paddleX, paddleSpeed = 7;
 let rightPressed = false, leftPressed = false;
-const brickWidth = 60, brickHeight = 20;
+let brickWidth = 60, brickHeight = 20;
 const brickPadding = 10, brickOffsetTop = 40, brickOffsetLeft = 30;
 let bricks = [], powerUps = [], score = 0, lives = 3;
 let gameRunning = false, gamePaused = false;
@@ -175,13 +175,19 @@ function alertEnd(msg) {
 }
 
 function initializeBricks() {
+    const totalPadding = (currentBrickColumnCount - 1) * brickPadding;
+    const dynamicBrickWidth = (canvas.width - 2 * brickOffsetLeft - totalPadding) / currentBrickColumnCount;
+    const offsetLeft = (canvas.width - (currentBrickColumnCount * (dynamicBrickWidth + brickPadding) - brickPadding)) / 2;
+
     bricks = Array.from({ length: currentBrickColumnCount }, (_, c) =>
         Array.from({ length: currentBrickRowCount }, (_, r) => ({
-            x: c * (brickWidth + brickPadding) + brickOffsetLeft,
-            y: r * (brickHeight + brickPadding) + brickOffsetTop,
+            x: offsetLeft + c * (dynamicBrickWidth + brickPadding),
+            y: brickOffsetTop + r * (brickHeight + brickPadding),
             status: 1
         }))
     );
+
+    brickWidth = dynamicBrickWidth;
 }
 
 document.addEventListener("keydown", e => {
