@@ -1,0 +1,35 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casse-Briques Arkanoid Style</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        canvas {
+            display: block;
+            margin: 20px auto;
+            background: #f2f2f2;
+            border: 2px solid #333;
+        }
+
+        body {
+            text-align: center;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <h1>Casse-Briques</h1>
+
+    <div>
+        <span>Score: <span id="score">0</span></span> |
+        <span>Vies: <span id="lives">3</span></span>
+    </div>
+
+    <canvas id="gameCanvas" width="1200" height="800"></canvas>
+
+    <!-- ✅ Utilise le type module pour activer import/export -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
