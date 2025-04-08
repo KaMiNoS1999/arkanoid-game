@@ -6,7 +6,8 @@ import {
     drawBall,
     drawPaddle,
     drawBricks,
-    drawPowerUps
+    drawPowerUps,
+    displayVersion
 } from './ui.js';
 
 import {
@@ -222,8 +223,5 @@ gameLoop();
 
 // 🎮 Affichage de la version
 window.addEventListener("DOMContentLoaded", () => {
-    const versionTag = document.createElement("div");
-    versionTag.textContent = `Version ${GAME_VERSION}`;
-    versionTag.id = "game-version";
-    document.body.appendChild(versionTag);
+    displayVersion(GAME_VERSION);
 });

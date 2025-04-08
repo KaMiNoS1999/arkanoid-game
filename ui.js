@@ -45,3 +45,20 @@ export function drawPowerUps(ctx, powerUps) {
         ctx.closePath();
     });
 }
+
+// === Ajout de la fonction displayVersion ===
+export function displayVersion(version) {
+    const versionTag = document.createElement("div");
+    versionTag.textContent = `Version ${version}`;
+    versionTag.id = "game-version";
+    versionTag.style.position = "fixed";
+    versionTag.style.bottom = "10px";
+    versionTag.style.left = "20px";
+    versionTag.style.fontSize = "0.9em";
+    versionTag.style.color = "#000";
+    versionTag.style.fontFamily = "monospace";
+    versionTag.style.opacity = "0.8";
+    versionTag.style.zIndex = "10";
+    document.body.appendChild(versionTag);
+}
+
