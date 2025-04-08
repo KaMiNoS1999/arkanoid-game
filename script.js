@@ -15,6 +15,8 @@ import {
     resetLevels
 } from './level_manager.js';
 
+import { GAME_VERSION } from './version.js';
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
@@ -211,3 +213,11 @@ function gameLoop() {
 
 initializeGame();
 gameLoop();
+
+// 🎮 Affichage de la version
+window.addEventListener("DOMContentLoaded", () => {
+    const versionTag = document.createElement("div");
+    versionTag.textContent = `Version ${GAME_VERSION}`;
+    versionTag.id = "game-version";
+    document.body.appendChild(versionTag);
+});

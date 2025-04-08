@@ -32,3 +32,26 @@ p {
     font-weight: bold;
     color: #007bff; /* Bleu pour les valeurs */
 }
+#game-version {
+    position: fixed;
+    bottom: 10px;
+    right: 20px;
+    font-size: 0.9em;
+    color: #777;
+    font-family: monospace;
+    opacity: 0.8;
+    animation: pulseVersion 4s infinite;
+    z-index: 10;
+}
+
+@keyframes pulseVersion {
+    0%, 100% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+}
