@@ -1,4 +1,4 @@
-// === UI.js : Affichage Arkanoid ===
+﻿// === UI.js : Affichage Arkanoid ===
 
 export function drawScoreUI(scoreElement, score) {
     scoreElement.textContent = score;
@@ -24,7 +24,7 @@ export function drawPaddle(ctx, canvas, paddleX, paddleWidth, paddleHeight) {
     ctx.closePath();
 }
 
-// === Version am�lior�e de drawBricks ===
+// === Version améliorée de drawBricks ===
 export function drawBricks(ctx, bricks, brickWidth, brickHeight, defaultColor) {
     bricks.forEach(column => {
         column.forEach(brick => {
@@ -63,5 +63,47 @@ export function displayVersion(version) {
     versionTag.style.opacity = "0.8";
     versionTag.style.zIndex = "10";
     document.body.appendChild(versionTag);
+}
+
+// === Ajout de la fonction showGameOverMenu ===
+export function showGameOverMenu(onRestart) {
+    const overlay = document.createElement("div");
+    overlay.id = "game-over-overlay";
+    Object.assign(overlay.style, {
+        position: "fixed",
+        top: "0",
+        left: "0",
+        width: "100vw",
+        height: "100vh",
+        background: "rgba(0, 0, 0, 0.8)",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        color: "#fff",
+        fontSize: "3em",
+        fontFamily: "monospace",
+        zIndex: "9999"
+    });
+
+    const message = document.createElement("div");
+    message.textContent = "🎮 GAME OVER";
+
+    const btn = document.createElement("button");
+    btn.textContent = "Rejouer";
+    Object.assign(btn.style, {
+        marginTop: "20px",
+        padding: "10px 30px",
+        fontSize: "1em",
+        cursor: "pointer"
+    });
+    btn.onclick = () => {
+        overlay.remove();
+        onRestart();
+    };
+
+    overlay.appendChild(message);
+    overlay.appendChild(btn);
+    document.body.appendChild(overlay);
 }
 
