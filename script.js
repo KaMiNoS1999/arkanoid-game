@@ -8,7 +8,8 @@ import {
     drawBricks,
     drawPowerUps,
     displayVersion,
-    showGameOverMenu
+    showGameOverMenu,
+    showVictoryMenu
 } from './ui.js';
 
 import {
@@ -18,6 +19,7 @@ import {
 } from './level_manager.js';
 
 import { GAME_VERSION } from './version.js';
+import { initUpgradeMenu, addCurrency } from './ui_argent_fonction_argent.js';
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -38,14 +40,21 @@ let gameRunning = false, gamePaused = false;
 const balls = [];
 
 let currentBrickColor, currentBrickRowCount, currentBrickColumnCount, currentBallSpeed, currentPowerUpChance;
+let activePowerUps = [];
 
 const powerUpTypes = [
     { type: 'expandPaddle', color: 'green' },
     { type: 'extraBall', color: 'green' },
     { type: 'slowBall', color: 'green' },
-    { type: 'fastBall', color: 'green' },
+    { type: 'fastBall', color: 'yellow' },
     { type: 'shrinkPaddle', color: 'red', isMalus: true }
 ];
+
+function handleUpgrade(id) {
+    if (id === 'expandPaddle') paddleWidth = 120;
+    else if (id === 'extraLife') lives++;
+    else if (id === 'multiBall') addBall(false);
+}
 
 ['Pause', 'Rejouer'].forEach((text, i) => {
     const btn = document.createElement('button');
@@ -79,6 +88,7 @@ function initializeGame() {
     score = 0;
     lives = 3;
     balls.length = 0;
+    activePowerUps = [];
 
     ({
         brickColor: currentBrickColor, brickRowCount: currentBrickRowCount,
@@ -86,7 +96,7 @@ function initializeGame() {
         powerUpChance: currentPowerUpChance
     } = level);
 
-    addBall();
+    addBall(true);
     paddleX = (canvas.width - paddleWidth) / 2;
     rightPressed = leftPressed = false;
     powerUps = [];
@@ -98,8 +108,14 @@ function initializeGame() {
     gamePaused = false;
 }
 
-function addBall() {
-    balls.push({ x: canvas.width / 2, y: canvas.height - 30, dx: currentBallSpeed, dy: -currentBallSpeed });
+function addBall(isMain = false) {
+    balls.push({
+        x: canvas.width / 2,
+        y: canvas.height - 30,
+        dx: currentBallSpeed,
+        dy: -currentBallSpeed,
+        main: isMain
+    });
 }
 
 function updatePaddlePosition() {
@@ -115,23 +131,31 @@ function updateBalls() {
         if (ball.x + ball.dx > canvas.width - ballRadius || ball.x + ball.dx < ballRadius) ball.dx = -ball.dx;
         if (ball.y + ball.dy < ballRadius) ball.dy = -ball.dy;
         else if (ball.y + ball.dy > canvas.height - ballRadius) {
-            if (ball.x > paddleX && ball.x < paddleX + paddleWidth) ball.dy = -ball.dy;
-            else balls.splice(i, 1);
+            if (ball.x > paddleX && ball.x < paddleX + paddleWidth) {
+                ball.dy = -ball.dy;
+            } else {
+                if (ball.main) {
+                    balls.splice(i, 1);
+                    if (--lives === 0) {
+                        gameRunning = false;
+                        showGameOverMenu(() => {
+                            resetLevels();
+                            initializeGame();
+                            gameLoop();
+                        });
+                        return;
+                    }
+                    paddleWidth = 80;
+                    activePowerUps = [];
+                    balls.length = 0;
+                    addBall(true);
+                    drawLivesUI(livesElement, lives);
+                } else {
+                    balls.splice(i, 1);
+                }
+            }
         }
     });
-    if (!balls.length) {
-        if (--lives === 0) {
-            gameRunning = false;
-            showGameOverMenu(() => {
-                resetLevels();
-                initializeGame();
-                gameLoop();
-            });
-            return;
-        }
-        addBall();
-        drawLivesUI(livesElement, lives);
-    }
 }
 
 function updatePowerUps() {
@@ -156,6 +180,7 @@ function collisionDetection() {
                     ball.dy = -ball.dy;
                     b.status = 0;
                     score++;
+                    addCurrency(1);
                     drawScoreUI(scoreElement, score);
                     if (Math.random() < currentPowerUpChance) {
                         const p = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
@@ -170,24 +195,24 @@ function collisionDetection() {
             alert("Niveau suivant !");
             initializeGame();
         } else {
-            alertEnd("Bravo ! Vous avez terminé tous les niveaux !");
+            gameRunning = false;
+            showVictoryMenu(() => {
+                resetLevels();
+                initializeGame();
+                gameLoop();
+            });
         }
     }
 }
 
 function applyPowerUp(type) {
-    const timer = 5000;
     if (type === 'expandPaddle') paddleWidth = 120;
     else if (type === 'shrinkPaddle') paddleWidth = 50;
     else if (type === 'slowBall') balls.forEach(b => { b.dx *= 0.7; b.dy *= 0.7; });
     else if (type === 'fastBall') balls.forEach(b => { b.dx *= 1.5; b.dy *= 1.5; });
-    else if (type === 'extraBall') return addBall();
+    else if (type === 'extraBall') return addBall(false);
 
-    setTimeout(() => paddleWidth = 80, timer);
-    if (['slowBall', 'fastBall'].includes(type)) setTimeout(() => balls.forEach(b => {
-        if (type === 'slowBall') { b.dx *= 1.3; b.dy *= 1.3; }
-        if (type === 'fastBall') { b.dx *= 0.67; b.dy *= 0.67; }
-    }), timer);
+    if (!activePowerUps.includes(type)) activePowerUps.push(type);
 }
 
 function alertEnd(msg) {
@@ -232,7 +257,11 @@ function gameLoop() {
     drawBricks(ctx, bricks, brickWidth, brickHeight, currentBrickColor);
     drawPaddle(ctx, canvas, paddleX, paddleWidth, paddleHeight);
     drawPowerUps(ctx, powerUps);
-    balls.forEach(ball => drawBall(ctx, ball, ballRadius));
+    balls.forEach(ball => {
+        if (ball.main) ctx.fillStyle = '#00f';
+        else ctx.fillStyle = '#fff';
+        drawBall(ctx, ball, ballRadius);
+    });
     updatePaddlePosition();
     updateBalls();
     updatePowerUps();
@@ -245,4 +274,5 @@ gameLoop();
 
 window.addEventListener("DOMContentLoaded", () => {
     displayVersion(GAME_VERSION);
+    initUpgradeMenu(handleUpgrade);
 });
