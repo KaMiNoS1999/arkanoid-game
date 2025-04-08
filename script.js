@@ -9,6 +9,12 @@ import {
     drawPowerUps
 } from './ui.js';
 
+import {
+    getCurrentLevel,
+    nextLevel,
+    resetLevels
+} from './level_manager.js';
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
@@ -26,6 +32,7 @@ const livesElement = document.getElementById('lives');
         if (!gamePaused) gameLoop();
     });
     if (text === 'Rejouer') btn.addEventListener('click', () => {
+        resetLevels();
         initializeGame();
         gameLoop();
     });
@@ -39,11 +46,14 @@ if (!canvas || !ctx || !scoreElement || !livesElement) {
 let ballRadius = 10, dx, dy, x, y;
 let paddleWidth = 80, paddleHeight = 12, paddleX, paddleSpeed = 7;
 let rightPressed = false, leftPressed = false;
-const brickRowCount = 8, brickColumnCount = 16, brickWidth = 60, brickHeight = 20;
+const brickWidth = 60, brickHeight = 20;
 const brickPadding = 10, brickOffsetTop = 40, brickOffsetLeft = 30;
 let bricks = [], powerUps = [], score = 0, lives = 3;
 let gameRunning = false, gamePaused = false;
 const balls = [];
+
+// Niveau dynamique
+let currentBrickColor, currentBrickRowCount, currentBrickColumnCount, currentBallSpeed, currentPowerUpChance;
 
 const powerUpTypes = [
     { type: 'expandPaddle', color: 'green' },
@@ -54,21 +64,34 @@ const powerUpTypes = [
 ];
 
 function initializeGame() {
-    canvas.width = 1200; canvas.height = 800;
-    score = 0; lives = 3;
+    const level = getCurrentLevel();
+
+    canvas.width = 1200;
+    canvas.height = 800;
+    score = 0;
+    lives = 3;
     balls.length = 0;
+
+    currentBrickColor = level.brickColor;
+    currentBrickRowCount = level.brickRowCount;
+    currentBrickColumnCount = level.brickColumnCount;
+    currentBallSpeed = level.ballSpeed;
+    currentPowerUpChance = level.powerUpChance;
+
     addBall();
     paddleX = (canvas.width - paddleWidth) / 2;
     rightPressed = leftPressed = false;
     powerUps = [];
+
     initializeBricks();
     drawScoreUI(scoreElement, score);
     drawLivesUI(livesElement, lives);
-    gameRunning = true; gamePaused = false;
+    gameRunning = true;
+    gamePaused = false;
 }
 
 function addBall() {
-    balls.push({ x: canvas.width / 2, y: canvas.height - 30, dx: 3, dy: -3 });
+    balls.push({ x: canvas.width / 2, y: canvas.height - 30, dx: currentBallSpeed, dy: -currentBallSpeed });
 }
 
 function updatePaddlePosition() {
@@ -117,7 +140,7 @@ function collisionDetection() {
                     b.status = 0;
                     score++;
                     drawScoreUI(scoreElement, score);
-                    if (Math.random() < 0.3) {
+                    if (Math.random() < currentPowerUpChance) {
                         let p = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
                         powerUps.push({ x: b.x + brickWidth / 2, y: b.y, ...p });
                     }
@@ -125,7 +148,14 @@ function collisionDetection() {
             });
         }
     }));
-    if (bricksLeft === 0) alertEnd("Bravo ! Vous avez gagné !");
+    if (bricksLeft === 0) {
+        if (nextLevel()) {
+            alert("Niveau suivant !");
+            initializeGame();
+        } else {
+            alertEnd("Bravo ! Vous avez terminé tous les niveaux !");
+        }
+    }
 }
 
 function applyPowerUp(type) {
@@ -143,8 +173,8 @@ function alertEnd(msg) {
 }
 
 function initializeBricks() {
-    bricks = Array.from({ length: brickColumnCount }, (_, c) =>
-        Array.from({ length: brickRowCount }, (_, r) => ({
+    bricks = Array.from({ length: currentBrickColumnCount }, (_, c) =>
+        Array.from({ length: currentBrickRowCount }, (_, r) => ({
             x: c * (brickWidth + brickPadding) + brickOffsetLeft,
             y: r * (brickHeight + brickPadding) + brickOffsetTop,
             status: 1
@@ -168,7 +198,7 @@ canvas.addEventListener("mousemove", e => {
 function gameLoop() {
     if (!gameRunning || gamePaused) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawBricks(ctx, bricks, brickWidth, brickHeight);
+    drawBricks(ctx, bricks, brickWidth, brickHeight, currentBrickColor);
     drawPaddle(ctx, canvas, paddleX, paddleWidth, paddleHeight);
     drawPowerUps(ctx, powerUps);
     balls.forEach(ball => drawBall(ctx, ball, ballRadius));

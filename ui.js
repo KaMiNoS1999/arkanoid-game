@@ -24,12 +24,12 @@ export function drawPaddle(ctx, canvas, paddleX, paddleWidth, paddleHeight) {
     ctx.closePath();
 }
 
-export function drawBricks(ctx, bricks, brickWidth, brickHeight) {
+export function drawBricks(ctx, bricks, brickWidth, brickHeight, brickColor = '#0095DD') {
     bricks.forEach(col => col.forEach(b => {
         if (b.status) {
             ctx.beginPath();
             ctx.rect(b.x, b.y, brickWidth, brickHeight);
-            ctx.fillStyle = '#0095DD';
+            ctx.fillStyle = brickColor;
             ctx.fill();
             ctx.closePath();
         }
