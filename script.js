@@ -1,4 +1,5 @@
-﻿// === Arkanoid Game Script (Gameplay uniquement, UI dans ui.js) ===
+﻿
+// === Arkanoid Game Script (Gameplay uniquement, UI dans ui.js) ===
 
 import {
     drawScoreUI,
@@ -19,7 +20,11 @@ import {
 } from './level_manager.js';
 
 import { GAME_VERSION } from './version.js';
-import { initUpgradeMenu, addCurrency } from './ui_argent_fonction_argent.js';
+import {
+    initUpgradeMenu,
+    addCurrency,
+    getTemporaryBonuses
+} from './ui_argent_fonction_argent.js';
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -51,16 +56,34 @@ const powerUpTypes = [
 ];
 
 function handleUpgrade(id) {
-    if (id === 'expandPaddle') paddleWidth = 120;
-    else if (id === 'extraLife') lives++;
-    else if (id === 'multiBall') addBall(false);
+    if (id === 'expandPaddle') {
+        paddleWidth = 120;
+    } else if (id === 'extraLife' || id === 'startExtraLife') {
+        lives++;
+        drawLivesUI(livesElement, lives);
+    } else if (id === 'multiBall') {
+        addBall(false);
+        addBall(false);
+    } else if (id === 'startBigPaddle') {
+        paddleWidth = 120;
+    } else if (id === 'startSlowBall') {
+        balls.forEach(b => {
+            b.dx *= 0.7;
+            b.dy *= 0.7;
+        });
+    }
 }
 
 ['Pause', 'Rejouer'].forEach((text, i) => {
     const btn = document.createElement('button');
     btn.textContent = text;
-    btn.style.margin = '10px';
-    btn.style.marginLeft = i ? '10px' : '0';
+    Object.assign(btn.style, {
+        margin: '10px',
+        marginLeft: i ? '10px' : '0',
+        padding: '8px 16px',
+        fontSize: '1em',
+        cursor: 'pointer'
+    });
     document.body.appendChild(btn);
     btn.addEventListener('click', () => {
         if (text === 'Pause') {
@@ -91,8 +114,10 @@ function initializeGame() {
     activePowerUps = [];
 
     ({
-        brickColor: currentBrickColor, brickRowCount: currentBrickRowCount,
-        brickColumnCount: currentBrickColumnCount, ballSpeed: currentBallSpeed,
+        brickColor: currentBrickColor,
+        brickRowCount: currentBrickRowCount,
+        brickColumnCount: currentBrickColumnCount,
+        ballSpeed: currentBallSpeed,
         powerUpChance: currentPowerUpChance
     } = level);
 
@@ -215,11 +240,6 @@ function applyPowerUp(type) {
     if (!activePowerUps.includes(type)) activePowerUps.push(type);
 }
 
-function alertEnd(msg) {
-    alert(msg);
-    gameRunning = false;
-}
-
 function initializeBricks() {
     const totalPadding = (currentBrickColumnCount - 1) * brickPadding;
     const dynamicBrickWidth = (canvas.width - 2 * brickOffsetLeft - totalPadding) / currentBrickColumnCount;
@@ -239,12 +259,12 @@ function initializeBricks() {
 }
 
 document.addEventListener("keydown", e => {
-    if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
-    if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = true;
+    if (["Right", "ArrowRight"].includes(e.key)) rightPressed = true;
+    if (["Left", "ArrowLeft"].includes(e.key)) leftPressed = true;
 });
 document.addEventListener("keyup", e => {
-    if (e.key === "Right" || e.key === "ArrowRight") rightPressed = false;
-    if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = false;
+    if (["Right", "ArrowRight"].includes(e.key)) rightPressed = false;
+    if (["Left", "ArrowLeft"].includes(e.key)) leftPressed = false;
 });
 canvas.addEventListener("mousemove", e => {
     const relX = e.clientX - canvas.getBoundingClientRect().left;
@@ -258,8 +278,7 @@ function gameLoop() {
     drawPaddle(ctx, canvas, paddleX, paddleWidth, paddleHeight);
     drawPowerUps(ctx, powerUps);
     balls.forEach(ball => {
-        if (ball.main) ctx.fillStyle = '#00f';
-        else ctx.fillStyle = '#fff';
+        ctx.fillStyle = ball.main ? '#00f' : '#fff';
         drawBall(ctx, ball, ballRadius);
     });
     updatePaddlePosition();
