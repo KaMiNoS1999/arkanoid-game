@@ -180,11 +180,14 @@ function initializeBricks() {
     const dynamicBrickWidth = (canvas.width - 2 * brickOffsetLeft - totalPadding) / currentBrickColumnCount;
     const offsetLeft = (canvas.width - (currentBrickColumnCount * (dynamicBrickWidth + brickPadding) - brickPadding)) / 2;
 
+    const colors = ['#ff595e', '#ff924c', '#ffca3a', '#c4f24b', '#56e39f']; // 🎨 couleurs funky !
+
     bricks = Array.from({ length: currentBrickColumnCount }, (_, c) =>
         Array.from({ length: currentBrickRowCount }, (_, r) => ({
             x: offsetLeft + c * (dynamicBrickWidth + brickPadding),
             y: brickOffsetTop + r * (brickHeight + brickPadding),
-            status: 1
+            status: 1,
+            color: colors[r % colors.length] // couleur par ligne
         }))
     );
 

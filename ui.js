@@ -24,16 +24,19 @@ export function drawPaddle(ctx, canvas, paddleX, paddleWidth, paddleHeight) {
     ctx.closePath();
 }
 
-export function drawBricks(ctx, bricks, brickWidth, brickHeight, brickColor = '#0095DD') {
-    bricks.forEach(col => col.forEach(b => {
-        if (b.status) {
-            ctx.beginPath();
-            ctx.rect(b.x, b.y, brickWidth, brickHeight);
-            ctx.fillStyle = brickColor;
-            ctx.fill();
-            ctx.closePath();
-        }
-    }));
+// === Version améliorée de drawBricks ===
+export function drawBricks(ctx, bricks, brickWidth, brickHeight, defaultColor) {
+    bricks.forEach(column => {
+        column.forEach(brick => {
+            if (brick.status) {
+                ctx.beginPath();
+                ctx.rect(brick.x, brick.y, brickWidth, brickHeight);
+                ctx.fillStyle = brick.color || defaultColor;
+                ctx.fill();
+                ctx.closePath();
+            }
+        });
+    });
 }
 
 export function drawPowerUps(ctx, powerUps) {
